@@ -1,6 +1,7 @@
 package com.termux.api;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
@@ -13,6 +14,10 @@ import android.util.JsonWriter;
 import com.termux.api.util.ResultReturner;
 import com.termux.api.util.ResultReturner.ResultJsonWriter;
 import com.termux.api.util.ResultReturner.WithInput;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,28 +45,28 @@ class KeystoreAPI {
     private static final String PROVIDER = "AndroidKeyStore";
 
     @SuppressLint("NewApi")
-    static void onReceive(TermuxApiReceiver apiReceiver, Intent intent) {
+    static void onReceive(final Context context, final JSONObject opts) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             // most of the keystore features were added in Android 6
-            printErrorMessage(apiReceiver, intent);
+            printErrorMessage(context);
             return;
         }
 
-        switch (intent.getStringExtra("command")) {
+        switch (opts.optString("command")) {
             case "list":
-                listKeys(apiReceiver, intent);
+                listKeys(context, opts);
                 break;
             case "generate":
-                generateKey(apiReceiver, intent);
+                generateKey(context, opts);
                 break;
             case "delete":
-                deleteKey(apiReceiver, intent);
+                deleteKey(context, opts);
                 break;
             case "sign":
-                signData(apiReceiver, intent);
+                signData(context, opts);
                 break;
             case "verify":
-                verifyData(apiReceiver, intent);
+                verifyData(context, opts);
                 break;
         }
     }
@@ -74,13 +79,13 @@ class KeystoreAPI {
      * </ul>
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private static void listKeys(TermuxApiReceiver apiReceiver, final Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, new ResultJsonWriter() {
+    private static void listKeys(final Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, new ResultJsonWriter() {
             @Override
             public void writeJson(JsonWriter out) throws GeneralSecurityException, IOException {
                 KeyStore keyStore = getKeyStore();
                 Enumeration<String> aliases = keyStore.aliases();
-                boolean detailed = intent.getBooleanExtra("detailed", false);
+                boolean detailed = opts.optBoolean("detailed", false);
 
                 out.beginArray();
                 while (aliases.hasMoreElements()) {
@@ -153,9 +158,9 @@ class KeystoreAPI {
      *     <li>alias: key alias</li>
      * </ul>
      */
-    private static void deleteKey(TermuxApiReceiver apiReceiver, final Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, out -> {
-            String alias = intent.getStringExtra("alias");
+    private static void deleteKey(final Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, out -> {
+            String alias = opts.optString("alias");
             // unfortunately this statement does not return anything
             // nor does it throw an exception if the alias does not exist
             getKeyStore().deleteEntry(alias);
@@ -193,15 +198,21 @@ class KeystoreAPI {
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("WrongConstant")
-    private static void generateKey(TermuxApiReceiver apiReceiver, final Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, out -> {
-            String alias = intent.getStringExtra("alias");
-            String algorithm = intent.getStringExtra("algorithm");
-            int purposes = intent.getIntExtra("purposes", 0);
-            String[] digests = intent.getStringArrayExtra("digests");
-            int size = intent.getIntExtra("size", 2048);
-            String curve = intent.getStringExtra("curve");
-            int userValidity = intent.getIntExtra("validity", 0);
+    private static void generateKey(final Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, out -> {
+            String alias = opts.optString("alias");
+            String algorithm = opts.optString("algorithm");
+            int purposes = opts.optInt("purposes", 0);
+
+            JSONArray digestsJson = opts.optJSONArray("digests");
+            String[] digests = new String[digestsJson.length()];
+            for(int i = 0; i < digestsJson.length(); i++){
+                digests[i] = digestsJson.optString(i);
+            }
+
+            int size = opts.optInt("size", 2048);
+            String curve = opts.optString("curve");
+            int userValidity = opts.optInt("validity", 0);
 
             KeyGenParameterSpec.Builder builder =
                     new KeyGenParameterSpec.Builder(alias, purposes);
@@ -243,12 +254,12 @@ class KeystoreAPI {
      *     </li>
      * </ul>
      */
-    private static void signData(TermuxApiReceiver apiReceiver, final Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, new WithInput() {
+    private static void signData(final Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, new WithInput() {
             @Override
             public void writeResult(PrintWriter out) throws Exception {
-                String alias = intent.getStringExtra("alias");
-                String algorithm = intent.getStringExtra("algorithm");
+                String alias = opts.optString("alias");
+                String algorithm = opts.optString("algorithm");
                 byte[] input = readStream(in);
 
                 PrivateKeyEntry key = (PrivateKeyEntry) getKeyStore().getEntry(alias, null);
@@ -279,14 +290,14 @@ class KeystoreAPI {
      *     <li>signature: path of the signature file</li>
      * </ul>
      */
-    private static void verifyData(TermuxApiReceiver apiReceiver, final Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, new WithInput() {
+    private static void verifyData(final Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, new WithInput() {
             @Override
             public void writeResult(PrintWriter out) throws GeneralSecurityException, IOException {
-                String alias = intent.getStringExtra("alias");
-                String algorithm = intent.getStringExtra("algorithm");
+                String alias = opts.optString("alias");
+                String algorithm = opts.optString("algorithm");
                 byte[] input = readStream(in);
-                File signatureFile = new File(intent.getStringExtra("signature"));
+                File signatureFile = new File(opts.optString("signature"));
 
                 byte[] signatureData = new byte[(int) signatureFile.length()];
                 int read = new FileInputStream(signatureFile).read(signatureData);
@@ -325,7 +336,7 @@ class KeystoreAPI {
         return byteStream.toByteArray();
     }
 
-    private static void printErrorMessage(TermuxApiReceiver apiReceiver, Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, out -> out.println("termux-keystore requires at least Android 6.0 (Marshmallow)."));
+    private static void printErrorMessage(final Context context) {
+        ResultReturner.returnData(context, out -> out.println("termux-keystore requires at least Android 6.0 (Marshmallow)."));
     }
 }

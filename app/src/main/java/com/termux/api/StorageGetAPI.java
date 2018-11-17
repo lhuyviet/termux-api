@@ -8,6 +8,8 @@ import android.net.Uri;
 import com.termux.api.util.ResultReturner;
 import com.termux.api.util.TermuxApiLogger;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -18,9 +20,9 @@ public class StorageGetAPI {
 
     private static final String FILE_EXTRA = "com.termux.api.storage.file";
 
-    static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, out -> {
-            final String fileExtra = intent.getStringExtra("file");
+    static void onReceive(final Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, out -> {
+            final String fileExtra = opts.optString("file");
             if (fileExtra == null || !new File(fileExtra).getParentFile().canWrite()) {
                 out.println("ERROR: Not a writable folder: " + fileExtra);
                 return;

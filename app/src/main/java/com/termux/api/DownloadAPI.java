@@ -8,18 +8,20 @@ import android.net.Uri;
 
 import com.termux.api.util.ResultReturner;
 
+import org.json.JSONObject;
+
 public class DownloadAPI {
 
-    static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, out -> {
-            final Uri downloadUri = intent.getData();
+    static void onReceive(final Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, out -> {
+            final Uri downloadUri = Uri.parse(opts.optString("url"));
             if (downloadUri == null) {
                 out.println("No download URI specified");
                 return;
             }
 
-            String title = intent.getStringExtra("title");
-            String description = intent.getStringExtra("description");
+            String title = opts.optString("title");
+            String description = opts.optString("description");
 
             DownloadManager manager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
             Request req = new Request(downloadUri);

@@ -14,6 +14,8 @@ import android.util.JsonWriter;
 import com.termux.api.util.ResultReturner;
 import com.termux.api.util.TermuxApiLogger;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -24,8 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TextToSpeechAPI {
 
-    public static void onReceive(final Context context, Intent intent) {
-        context.startService(new Intent(context, TextToSpeechService.class).putExtras(intent.getExtras()));
+    public static void onReceive(final Context context, JSONObject opts) {
+        context.startService(new Intent(context, TextToSpeechService.class).putExtra("opts", opts.toString()));
     }
 
     public static class TextToSpeechService extends IntentService {
@@ -88,7 +90,7 @@ public class TextToSpeechAPI {
                 }
             }, speechEngine);
 
-            ResultReturner.returnData(this, intent, new ResultReturner.WithInput() {
+            ResultReturner.returnData(this, new ResultReturner.WithInput() {
                 @Override
                 public void writeResult(PrintWriter out) {
 

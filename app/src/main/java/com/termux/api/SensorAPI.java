@@ -32,10 +32,10 @@ public class SensorAPI {
     /**
      * Starts our SensorReader service
      */
-    public static void onReceive(final Context context, final Intent intent) {
+    public static void onReceive(final Context context, final JSONObject opts) {
         Intent serviceIntent = new Intent(context, SensorReaderService.class);
-        serviceIntent.setAction(intent.getAction());
-        serviceIntent.putExtras(intent.getExtras());
+        serviceIntent.setAction(opts.optString("action"));
+        serviceIntent.putExtra("opts", opts.toString());
         context.startService(serviceIntent);
     }
 
@@ -158,10 +158,10 @@ public class SensorAPI {
         private void postSensorCommandResult(final Context context, final Intent intent,
                                              final SensorCommandResult result) {
 
-            ResultReturner.returnData(context, intent, out -> {
-                out.append(result.message).append("\n");
+            ResultReturner.returnData(context, out -> {
+                out.append(result.message + "\n");
                 if (result.error != null) {
-                    out.append(result.error).append("\n");
+                    out.append(result.error + "\n");
                 }
                 out.flush();
                 out.close();

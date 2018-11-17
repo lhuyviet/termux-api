@@ -33,10 +33,10 @@ public class MicRecorderAPI {
     /**
      * Starts our MicRecorder service
      */
-    static void onReceive(final Context context, final Intent intent) {
+    static void onReceive(final Context context, JSONObject opts) {
         Intent recorderService = new Intent(context, MicRecorderService.class);
-        recorderService.setAction(intent.getAction());
-        recorderService.putExtras(intent.getExtras());
+        recorderService.setAction(opts.optString("action"));
+        recorderService.putExtra("opts", opts.toString());
         context.startService(recorderService);
     }
 
@@ -95,10 +95,10 @@ public class MicRecorderAPI {
         protected static void postRecordCommandResult(final Context context, final Intent intent,
                                                       final RecorderCommandResult result) {
 
-            ResultReturner.returnData(context, intent, out -> {
-                out.append(result.message).append("\n");
+            ResultReturner.returnData(context, out -> {
+                out.append(result.message + "\n");
                 if (result.error != null) {
-                    out.append(result.error).append("\n");
+                    out.append(result.error + "\n");
                 }
                 out.flush();
                 out.close();

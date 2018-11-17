@@ -9,19 +9,21 @@ import android.text.TextUtils;
 
 import com.termux.api.util.ResultReturner;
 
+import org.json.JSONObject;
+
 import java.io.PrintWriter;
 
 public class ClipboardAPI {
 
-    static void onReceive(TermuxApiReceiver apiReceiver, final Context context, Intent intent) {
+    static void onReceive(final Context context, final JSONObject opts) {
         final ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clipData = clipboard.getPrimaryClip();
 
-        boolean version2 = "2".equals(intent.getStringExtra("api_version"));
+        boolean version2 = "2".equals(opts.optString("api_version"));
         if (version2) {
-            boolean set = intent.getBooleanExtra("set", false);
+            boolean set = opts.optBoolean("set", false);
             if (set) {
-                ResultReturner.returnData(apiReceiver, intent, new ResultReturner.WithStringInput() {
+                ResultReturner.returnData(context, new ResultReturner.WithStringInput() {
                     @Override
                     protected boolean trimInput() {
                         return false;
@@ -33,7 +35,7 @@ public class ClipboardAPI {
                     }
                 });
             } else {
-                ResultReturner.returnData(apiReceiver, intent, out -> {
+                ResultReturner.returnData(context, out -> {
                     if (clipData == null) {
                         out.print("");
                     } else {
@@ -49,13 +51,13 @@ public class ClipboardAPI {
                 });
             }
         } else {
-            final String newClipText = intent.getStringExtra("text");
+            final String newClipText = opts.optString("text");
             if (newClipText != null) {
                 // Set clip.
                 clipboard.setPrimaryClip(ClipData.newPlainText("", newClipText));
             }
 
-            ResultReturner.returnData(apiReceiver, intent, out -> {
+            ResultReturner.returnData(context, out -> {
                 if (newClipText == null) {
                     // Get clip.
                     if (clipData == null) {

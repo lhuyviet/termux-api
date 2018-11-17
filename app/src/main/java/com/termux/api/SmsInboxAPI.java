@@ -9,8 +9,8 @@ import com.termux.api.util.ResultReturner.ResultJsonWriter;
 
 public class SmsInboxAPI {
 
-    static void onReceive(TermuxApiReceiver apiReceiver, final Context context, Intent intent) {
-        ResultReturner.returnData(apiReceiver, intent, new ResultJsonWriter() {
+    static void onReceive(final Context context, JSONObject opts) {
+        ResultReturner.returnData(context, new ResultJsonWriter() {
             @Override
             public void writeJson(JsonWriter out) throws Exception {
                 out.beginObject();
