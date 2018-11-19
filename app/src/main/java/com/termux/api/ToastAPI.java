@@ -27,6 +27,18 @@ public class ToastAPI extends AppCompatActivity {
         final int gravity = getGravity(opts);
         final String text = opts.optString("text");
 
+        makeToast(context, durationExtra, backgroundColor, textColor, gravity, text);
+        ResultReturner.noteDone(context);
+    }
+
+    static void makeText(final Context context, final String text, final int durationExtra) {
+        final int backgroundColor = Color.GRAY;
+        final int textColor = Color.WHITE;
+        final int gravity = Gravity.BOTTOM;
+        makeToast(context, durationExtra, backgroundColor, textColor, gravity, text);
+    }
+
+        static void makeToast(final Context context, final int durationExtra, final int backgroundColor, final int textColor, final int gravity, final String text) {
         final Handler handler = new Handler(Looper.getMainLooper());
                 handler.post(() -> {
                     Toast toast = Toast.makeText(context, text, durationExtra);
