@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.Looper;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
@@ -17,21 +19,17 @@ import org.json.JSONObject;
 
 import java.io.PrintWriter;
 
-public class ToastAPI {
-
+public class ToastAPI extends AppCompatActivity {
     public static void onReceive(final Context context, JSONObject opts) {
         final int durationExtra = opts.optBoolean("short", false) ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG;
         final int backgroundColor = getColor(opts, "background", Color.GRAY);
         final int textColor = getColor(opts, "text_color", Color.WHITE);
         final int gravity = getGravity(opts);
+        final String text = opts.optString("text");
 
-        final Handler handler = new Handler();
-
-        ResultReturner.returnData(context, new ResultReturner.WithStringInput() {
-            @Override
-            public void writeResult(PrintWriter out) {
+        final Handler handler = new Handler(Looper.getMainLooper());
                 handler.post(() -> {
-                    Toast toast = Toast.makeText(context, inputString, durationExtra);
+                    Toast toast = Toast.makeText(context, text, durationExtra);
                     View toastView = toast.getView();
 
                     Drawable background = toastView.getBackground();
@@ -42,9 +40,8 @@ public class ToastAPI {
 
                     toast.setGravity(gravity, 0, 0);
                     toast.show();
+                    ResultReturner.noteDone(context);
                 });
-            }
-        });
     }
 
     protected static int getColor(JSONObject opts, String extra, int defaultColor) {
