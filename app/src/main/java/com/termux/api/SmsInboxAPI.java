@@ -7,6 +7,8 @@ import android.util.JsonWriter;
 import com.termux.api.util.ResultReturner;
 import com.termux.api.util.ResultReturner.ResultJsonWriter;
 
+import org.json.JSONObject;
+
 public class SmsInboxAPI {
 
     static void onReceive(final Context context, JSONObject opts) {

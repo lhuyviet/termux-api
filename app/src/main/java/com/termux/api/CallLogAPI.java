@@ -14,7 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
->>>>>>> change majority of app to use sockets with json instead of intents
 /**
  * API that allows you to get call log history information
  */

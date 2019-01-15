@@ -6,10 +6,12 @@ import android.util.JsonWriter;
 
 import com.termux.api.util.ResultReturner;
 
+import org.json.JSONObject;
+
 public class SmsSendAPI {
 
-    static void onReceive(Context context final JSONObject opts) {
-        ResultReturner.returnData(apiReceiver, intent, new ResultReturner.ResultJsonWriter() {
+    static void onReceive(Context context, final JSONObject opts) {
+        ResultReturner.returnData(context, new ResultReturner.ResultJsonWriter() {
             @Override
             public void writeJson(JsonWriter out) throws Exception {
                 out.beginObject();
