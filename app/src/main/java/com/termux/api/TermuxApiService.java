@@ -125,7 +125,7 @@ public class TermuxApiService extends Service {
                 }
                 break;
             case "Dialog":
-                context.startActivity(new Intent(context, DialogActivity.class).putExtra("data", data.toString()).addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK));
+                context.startActivity(new Intent(context, DialogActivity.class).putExtra("data", data.toString()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK));
                 break;
             case "Download":
                 DownloadAPI.onReceive(context, data);
